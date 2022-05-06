@@ -1,4 +1,5 @@
 #include "Bat.h"
+#include "Ball.h"
 #include <sstream>
 #include <cstdlib>
 #include <SFML/Graphics.hpp>
@@ -12,6 +13,7 @@ int main()
 	int lives = 3;
 
 	Bat bat(1920 / 2, 1080 - 20);
+	Ball ball(1920 / 2, 0);
 
 	Text hud;
 
@@ -67,17 +69,56 @@ int main()
 
 		Time dt = clock.restart();
 		bat.update(dt);
+		ball.update(dt);
 
 		std::stringstream ss;
 		ss << "Score:" << score << " Lives: " << lives;
 
 		hud.setString(ss.str());
 
+		// Handle the ball hitting the bottom.
+		if (ball.getPosition().top > window.getSize().y)
+		{
+			ball.reboundBottom();
+			lives--;
+
+			if (lives < 1)
+			{
+				score = 0;
+				lives = 3;
+			}
+		}
+
+		// Handle the ball hitting the top.
+		if (ball.getPosition().top < 0)
+		{
+			ball.reboundBatorTop();
+			score++;
+		}
+
+
+		// Handle the ball hitting the sides.
+		if
+			(
+			ball.getPosition().left < 0 or 
+			ball.getPosition().left + ball.getPosition().width > window.getSize().x
+			)
+		{
+			ball.reboundSides();
+		}
+
+		// Handle the ball hitting the bat.
+		if (ball.getPosition().intersects(bat.getPosition()))
+		{
+			ball.reboundBatorTop();
+		}
+	
 		// Draw the bat, ball, and HUD
 
 		window.clear();
 		window.draw(hud);
 		window.draw(bat.getShape());
+		window.draw(ball.getShape());
 		window.display();
 	}
 	return 0;
